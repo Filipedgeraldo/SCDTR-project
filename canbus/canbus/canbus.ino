@@ -28,13 +28,17 @@ void setup(){
 
 void loop() {
 //send a few msgs in a burst
+struct id_info id, id_r;
+id.from=myID;
+id.to =2;
+id.code= 10;
   for( int i = 0; i < 4 ; i++ ) {
   Serial.print( "Sending: " );
   Serial.println( counter );
-  if( write( i , counter++ ) != MCP2515::ERROR_OK )
+  if( write( pack_id(id) , myID/*counter++*/ ) != MCP2515::ERROR_OK )
     Serial.println( "\t \t \t \t MCP2515 TX Buf Full" );
   }
-  delay(10000);
+  delay(100);
   if( interrupt ) {
     interrupt = false;
     if( mcp2515_overflow ) {
@@ -54,6 +58,22 @@ void loop() {
         msg.bytes[ i ] = frame.data[ i ];
       Serial.print( "\t \t Receiving: " );
       Serial.println( msg.value );
+      id_r = unpack_id(frame.can_id);
+      Serial.print( "\t \t to: " );
+      Serial.print(id_r.to);
+      Serial.print( "\t \t from: " );
+      Serial.print(id_r.from);
+      Serial.print( "\t \t code: " );
+      Serial.print(id_r.code);
+      
+      /*
+      id_analysis id1;
+    
+      id1.id_value=frame.can_id;
+      for (int i=0; i<32;i++){
+        Serial.print(id1.bits[i],BIN);
+      }*/
+      Serial.println(" ");
       cli(); has_data = cf_stream.get( frame ); sei();
     }
   }

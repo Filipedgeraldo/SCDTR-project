@@ -46,3 +46,26 @@ MCP2515::ERROR write(uint32_t id, uint32_t val) {
   //send data
   return mcp2515.sendMessage(&frame);
 }
+
+
+
+uint32_t  pack_id (struct id_info id_unp){
+  uint32_t id=0;
+  id |= id_unp.to;
+  id <<= 2;
+  id |= id_unp.from;
+  id <<=7;
+  id |= id_unp.code;
+  return id;
+}
+
+struct id_info unpack_id(uint32_t id_pack){
+  struct id_info id;
+  id.code = id_pack & 0x7F;
+  id_pack >>=7;
+  id.from = id_pack & 0x3;
+  id_pack>>=2;
+  id.to = id_pack & 0x3;
+  return id;
+  }
+  

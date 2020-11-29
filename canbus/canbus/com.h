@@ -5,6 +5,13 @@
 #include <mcp2515.h>
 #include "const.h"
 
+
+struct id_info {
+  int8_t to;
+  int8_t from;
+  int8_t code;
+}; 
+
 class can_frame_stream {
   can_frame cf_buffer[ buffsize ];
   int read_index; //where to read next message
@@ -47,6 +54,10 @@ extern volatile bool interrupt;
 extern volatile bool mcp2515_overflow;
 extern volatile bool arduino_overflow;
 MCP2515::ERROR write(uint32_t id, uint32_t val);
+
+uint32_t  pack_id (struct id_info id_unp);
+struct id_info unpack_id(uint32_t id_pack);
+
 
 
 #endif
