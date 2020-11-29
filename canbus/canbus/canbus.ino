@@ -16,14 +16,20 @@ void setup(){
   mcp2515.setBitrate(CAN_1000KBPS, MCP_16MHZ);
 
   //setting filters and mask to receive only messages with my ID and generic ID
-/*  mcp2515.setConfigMode();
+  #ifdef FILTERS
+  mcp2515.setConfigMode();
   mcp2515.setFilterMask(MCP2515::MASK0, 0, mask);
   mcp2515.setFilter(MCP2515::RXF0, 0, filt1);
   mcp2515.setFilterMask(MCP2515::MASK1, 0, mask);
   mcp2515.setFilter(MCP2515::RXF2, 0, filt2);
-  */
+  #endif
+
+  #ifndef LOOPBACK
   mcp2515.setNormalMode();
-  //mcp2515.setLoopbackMode();
+  #endif
+  #ifdef LOOPBACK
+  mcp2515.setLoopbackMode();
+  #endif
 }
 
 void loop() {
@@ -64,16 +70,7 @@ id.code= 10;
       Serial.print( "\t \t from: " );
       Serial.print(id_r.from);
       Serial.print( "\t \t code: " );
-      Serial.print(id_r.code);
-      
-      /*
-      id_analysis id1;
-    
-      id1.id_value=frame.can_id;
-      for (int i=0; i<32;i++){
-        Serial.print(id1.bits[i],BIN);
-      }*/
-      Serial.println(" ");
+      Serial.println(id_r.code);
       cli(); has_data = cf_stream.get( frame ); sei();
     }
   }

@@ -1,16 +1,14 @@
 #include "com.h"
 #include "const.h"
 
+//variable creation
 volatile bool interrupt=false;
 volatile bool mcp2515_overflow=false;
 volatile bool arduino_overflow=false;
 volatile can_frame_stream cf_stream; //create one object to use
 MCP2515 mcp2515(10); //SS pin 10
 
-
-
-
-
+//function that is called to handke the interrups and get data from canbus
 void irqHandler(){
    can_frame frm;
   uint8_t irq = mcp2515.getInterrupts();
@@ -35,6 +33,8 @@ void irqHandler(){
   interrupt = true; //notify loop()
 } //end irqHandler()
 
+
+//write funcion to canbus
 MCP2515::ERROR write(uint32_t id, uint32_t val) {
   can_frame frame;
   frame.can_id = id;
@@ -48,7 +48,7 @@ MCP2515::ERROR write(uint32_t id, uint32_t val) {
 }
 
 
-
+//packs id
 uint32_t  pack_id (struct id_info id_unp){
   uint32_t id=0;
   id |= id_unp.to;
@@ -59,6 +59,7 @@ uint32_t  pack_id (struct id_info id_unp){
   return id;
 }
 
+//unpacks id
 struct id_info unpack_id(uint32_t id_pack){
   struct id_info id;
   id.code = id_pack & 0x7F;

@@ -5,13 +5,22 @@
 #include <mcp2515.h>
 #include "const.h"
 
-
+//data for pack and unpack id from message
 struct id_info {
   int8_t to;
   int8_t from;
   int8_t code;
 }; 
 
+//variable declaration
+extern MCP2515 mcp2515; //SS pin 10
+
+//notification flag for ISR and loop()
+extern volatile bool interrupt;
+extern volatile bool mcp2515_overflow;
+extern volatile bool arduino_overflow;
+
+//can frame class declaration
 class can_frame_stream {
   can_frame cf_buffer[ buffsize ];
   int read_index; //where to read next message
@@ -31,8 +40,7 @@ public:
       write_lock = true; //cannot write more
     return 1;
    }
-
-  inline int get(can_frame &frame ){
+   inline int get(can_frame &frame ){
     if( !write_lock && ( read_index== write_index ) )
       return 0; //empty buffer
     if( write_lock && ( read_index == write_index ) )
@@ -45,19 +53,10 @@ public:
 extern volatile can_frame_stream cf_stream; //create one object to use
 
 
-
-void irqHandler();
-
-extern MCP2515 mcp2515; //SS pin 10
-//notification flag for ISR and loop()
-extern volatile bool interrupt;
-extern volatile bool mcp2515_overflow;
-extern volatile bool arduino_overflow;
+//function declaration
 MCP2515::ERROR write(uint32_t id, uint32_t val);
-
+void irqHandler();
 uint32_t  pack_id (struct id_info id_unp);
 struct id_info unpack_id(uint32_t id_pack);
-
-
 
 #endif
