@@ -93,8 +93,16 @@ void setup(){
   SPI.usingInterrupt(0);
   mcp2515.reset();
   mcp2515.setBitrate(CAN_1000KBPS, MCP_16MHZ);
-  //mcp2515.setNormalMode();
-  mcp2515.setLoopbackMode();
+
+  mcp2515.setConfigMode();
+  mcp2515.setFilterMask(MCP2515::MASK0, 0, 0x7FF);
+  mcp2515.setFilter(MCP2515::RXF0, 0, 0);
+  mcp2515.setFilterMask(MCP2515::MASK1, 0, 0x7FF);
+  
+  mcp2515.setFilter(MCP2515::RXF2, 0, 0);
+  
+  mcp2515.setNormalMode();
+  //mcp2515.setLoopbackMode();
 }
 
 
