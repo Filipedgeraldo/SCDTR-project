@@ -4,7 +4,7 @@ Information about SCDTR project group number XX
 CanBus communication:
 	.messages allow 2 integers of 4 bytes
 	.Message id format (11bits)
-		id_to1|id_to0|id_from1|id_from0|code7|code6|code5|code4|code3|code2|code1|code0
+		id_from1|id_from0|code7|code6|code5|code4|code3|code2|code1|code0|id_to1|id_to0
 	.to =00 - all nodes received and responde - general message
 	.list of codes:
 		(0) 0000000 - Initialization code - all codes must respond - enter configure new node mode

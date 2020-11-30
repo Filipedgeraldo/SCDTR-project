@@ -20,8 +20,10 @@ void setup(){
   mcp2515.setConfigMode();
   mcp2515.setFilterMask(MCP2515::MASK0, 0, mask);
   mcp2515.setFilter(MCP2515::RXF0, 0, filt1);
+  mcp2515.setFilter(MCP2515::RXF1, 0, filt2);
   mcp2515.setFilterMask(MCP2515::MASK1, 0, mask);
   mcp2515.setFilter(MCP2515::RXF2, 0, filt2);
+  mcp2515.setFilter(MCP2515::RXF3, 0, filt1);
   #endif
 
   #ifndef LOOPBACK
