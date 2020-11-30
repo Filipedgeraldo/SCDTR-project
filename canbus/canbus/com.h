@@ -3,6 +3,7 @@
 
 #include <SPI.h>
 #include <mcp2515.h>
+#include <can.h>
 #include "const.h"
 
 //data for pack and unpack id from message
@@ -10,7 +11,14 @@ struct id_info {
   int8_t to;
   int8_t from;
   int8_t code;
-}; 
+};
+
+//data from one message
+struct message{
+  struct id_info id;
+  union my_can_msg value1;
+  union my_can_msg value2;
+};
 
 //variable declaration
 extern MCP2515 mcp2515; //SS pin 10
@@ -54,9 +62,9 @@ extern volatile can_frame_stream cf_stream; //create one object to use
 
 
 //function declaration
-MCP2515::ERROR write(uint32_t id, uint32_t val);
+MCP2515::ERROR write(uint32_t id, float val1, float val2, int m_len);
 void irqHandler();
 uint32_t  pack_id (struct id_info id_unp);
 struct id_info unpack_id(uint32_t id_pack);
-
+struct message read_message( bool* has_data);
 #endif

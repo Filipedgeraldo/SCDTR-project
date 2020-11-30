@@ -35,47 +35,43 @@ void setup(){
 }
 
 void loop() {
-//send a few msgs in a burst
-struct id_info id, id_r;
-id.from=myID;
-id.to =2;
-id.code= 10;
+  struct id_info id_s;
+  struct message m_read;
+  bool has_data;
+  
+  //defines id for message - just for testing porpouse
+  id_s.from=myID;
+  id_s.to =2;
+  id_s.code= 10;
+
   for( int i = 0; i < 4 ; i++ ) {
   Serial.print( "Sending: " );
   Serial.println( counter );
-  id.to =i;
-  if( write( pack_id(id) , myID/*counter++*/ ) != MCP2515::ERROR_OK )
-    Serial.println( "\t \t \t \t MCP2515 TX Buf Full" );
+  id_s.to =i;
+  if( write( pack_id(id_s) ,counter++, counter,8) != MCP2515::ERROR_OK )
+    #ifdef DEBUG
+      Serial.println( "\t \t \t \t MCP2515 TX Buf Full" );
+    #endif
   }
-  delay(100);
+  
+  
   if( interrupt ) {
-    interrupt = false;
-    if( mcp2515_overflow ) {
-      Serial.println( "\t\t\t\tMCP2516 RX Buf Overflow" );
-      mcp2515_overflow = false;
-    }
-    if( arduino_overflow ) {
-      Serial.println( "\t\t\t\tArduino Buffers Overflow" );
-      arduino_overflow = false;
-    }
-    can_frame frame;
-    bool has_data;
-    cli(); has_data = cf_stream.get( frame ); sei();
+    m_read = read_message( &has_data);
     while (has_data){
-      my_can_msg msg;
-      for( int i = 0 ; i < 4 ; i++ )
-        msg.bytes[ i ] = frame.data[ i ];
-      Serial.print( "\t \t Receiving: " );
-      Serial.println( msg.value );
-      id_r = unpack_id(frame.can_id);
-      Serial.print( "\t \t to: " );
-      Serial.print(id_r.to);
-      Serial.print( "\t \t from: " );
-      Serial.print(id_r.from);
-      Serial.print( "\t \t code: " );
-      Serial.println(id_r.code);
-      cli(); has_data = cf_stream.get( frame ); sei();
+      #ifdef DEBUG
+        Serial.print( "\t \t Receiving: " );
+        Serial.println( m_read.value1.value );
+        Serial.print( "\t \t Receiving: " );
+        Serial.println( m_read.value2.value );
+        Serial.print( "\t \t to: " );
+        Serial.print(m_read.id.to);
+        Serial.print( "\t \t from: " );
+        Serial.print(m_read.id.from);
+        Serial.print( "\t \t code: " );
+        Serial.println(m_read.id.code);
+      #endif
+      m_read = read_message( &has_data);
     }
   }
-  delay(1); //some time to breath
+  delay(100); //some time to breath
 }
