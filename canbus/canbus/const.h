@@ -4,7 +4,7 @@
 //variables that can be changed
 #define FILTERS
 //#define LOOPBACK
-const int myID=2; //id of the node
+const int myID=1; //id of the node
 
 
 static const int buffsize = 10; //Size of comunication arduino buffer

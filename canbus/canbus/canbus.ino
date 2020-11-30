@@ -41,6 +41,7 @@ id.code= 10;
   for( int i = 0; i < 4 ; i++ ) {
   Serial.print( "Sending: " );
   Serial.println( counter );
+  id.to =i;
   if( write( pack_id(id) , myID/*counter++*/ ) != MCP2515::ERROR_OK )
     Serial.println( "\t \t \t \t MCP2515 TX Buf Full" );
   }
