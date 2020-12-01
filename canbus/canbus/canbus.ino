@@ -2,9 +2,11 @@
 #include "com.h"
 #include <SPI.h>
 #include <mcp2515.h>
+#include <EEPROM.h>
 
+//to be moved
 unsigned long counter = 0;
-
+int myID=0;
 
 void setup(){
   Serial.begin(500000);
@@ -14,15 +16,20 @@ void setup(){
   SPI.usingInterrupt(0);
   mcp2515.reset();
   mcp2515.setBitrate(CAN_1000KBPS, MCP_16MHZ);
-
+  //getting id from eeprom
+  myID=EEPROM.read(0);
+  #ifdef DEBUG
+    Serial.print("myId: ");
+    Serial.println(myID);
+  #endif
   //setting filters and mask to receive only messages with my ID and generic ID
   #ifdef FILTERS
   mcp2515.setConfigMode();
   mcp2515.setFilterMask(MCP2515::MASK0, 0, mask);
   mcp2515.setFilter(MCP2515::RXF0, 0, filt1);
-  mcp2515.setFilter(MCP2515::RXF1, 0, filt2);
+  mcp2515.setFilter(MCP2515::RXF1, 0, myID);
   mcp2515.setFilterMask(MCP2515::MASK1, 0, mask);
-  mcp2515.setFilter(MCP2515::RXF2, 0, filt2);
+  mcp2515.setFilter(MCP2515::RXF2, 0, myID);
   mcp2515.setFilter(MCP2515::RXF3, 0, filt1);
   #endif
 
