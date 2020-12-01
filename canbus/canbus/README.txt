@@ -1,5 +1,11 @@
 Information about SCDTR project group number XX
 
+!!use EEPROM write program to write teh id value before start!!
+
+EEPROM info:
+	addr 0 - myID
+	addr 1 - number of nodes in the system
+
 
 CanBus communication:
 	.messages allow 2 floats of 4 bytes - define message size of 8
@@ -13,6 +19,7 @@ CanBus communication:
 		(3) 0000011 - Turn light at max
 		(4) 0000100 - Turn light off
 		(5) 0000101 - Back to normal mode
+		
 		(6) 0000110 - I am the hub
 		(7) 0000111 - I am not the hub
 		(8) 0001000 - Set to occupied

@@ -1,5 +1,5 @@
-#ifndef constants_file
-#define constants_file
+#ifndef CONST_H
+#define CONST_H
 
 //variables that can be changed
 #define DEBUG
@@ -18,5 +18,9 @@ union my_can_msg {
   float value;
   unsigned char bytes[4]; //TO BE CHANGED
 };
+
+
+//to be in eemprom
+const int n_ids = 2;
 
 #endif

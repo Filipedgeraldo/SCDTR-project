@@ -7,6 +7,7 @@
 //to be moved
 unsigned long counter = 0;
 int myID=0;
+bool config_flag=0;
 
 void setup(){
   Serial.begin(500000);
@@ -45,6 +46,7 @@ void loop() {
   struct id_info id_s;
   struct message m_read;
   bool has_data;
+  bool ack [n_ids-1];
   
   //defines id for message - just for testing porpouse
   id_s.from=myID;
@@ -77,6 +79,81 @@ void loop() {
         Serial.print( "\t \t code: " );
         Serial.println(m_read.id.code);
       #endif
+      switch (m_read.id.code){
+        //beguining of start up procedure messages
+        case 0:
+          config_flag=1;
+          // !!!!!!!! stops all streams of data !!!!!!!!
+          // !!!!!!! put output at zero !!!!!!!
+           id_s.from=myID;
+           id_s.to =m_read.id.from;
+           id_s.code= 1;
+          if( write( pack_id(id_s) ,0, 0,8) != MCP2515::ERROR_OK )
+            #ifdef DEBUG
+              Serial.println( "\t \t \t \t MCP2515 TX Buf Full" );
+            #endif
+          break;
+        case 1:
+          ack[m_read.id.from]=1;
+          break;
+        case 2:
+          //!!!!!!!!!! get lux value !!!!!!!!
+          //!!!!!!!!!! calculate the slope for number in message !!!!!!!!!!!
+          id_s.from=myID;
+          id_s.to =1;
+          id_s.code= 1;
+          if( write( pack_id(id_s) ,0, 2,8) != MCP2515::ERROR_OK )
+            #ifdef DEBUG
+              Serial.println( "\t \t \t \t MCP2515 TX Buf Full" );
+            #endif
+          break;
+        case 3:
+          // !!!!!!!!!!!!!! turn light at max !!!!!!!!!!!!
+          id_s.from=myID;
+          id_s.to =1;
+          id_s.code= 1;
+          if( write( pack_id(id_s) ,0, 3,8) != MCP2515::ERROR_OK )
+            #ifdef DEBUG
+              Serial.println( "\t \t \t \t MCP2515 TX Buf Full" );
+            #endif
+          break;
+        case 4:
+          //!!!!!!!!!!! turn light off !!!!!!!!!!
+          id_s.from=myID;
+          id_s.to =1;
+          id_s.code= 1;
+          if( write( pack_id(id_s) ,0, 4,8) != MCP2515::ERROR_OK )
+            #ifdef DEBUG
+              Serial.println( "\t \t \t \t MCP2515 TX Buf Full" );
+            #endif
+          break;
+        case 5:
+          config_flag=0;
+          break;
+        //end of start up procedure messages
+        //beguining of hub fuction messages
+        case 6:
+          break;
+        case 7:
+          break;
+        case 8:
+          break;
+        case 9:
+          break;
+        case 10:
+          break;
+        case 11:
+          break;
+        case 12:
+          break;
+        case 13:
+          break;
+        //end of hub fuction messages
+        case 14:
+          Serial.println("Code 14");
+          break;
+        
+      }
       m_read = read_message( &has_data);
     }
   }
