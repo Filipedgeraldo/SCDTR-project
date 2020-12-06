@@ -5,9 +5,13 @@
 #include <EEPROM.h>
 
 //to be moved
-unsigned long counter = 0;
+//unsigned long counter = 0;
+//int myID=0;
+short config_flag=0;
 int myID=0;
-bool config_flag=0;
+bool ack [n_max];
+bool nodes[n_max];
+bool check_acks_flag=0;
 
 void setup(){
   Serial.begin(500000);
@@ -40,29 +44,25 @@ void setup(){
   #ifdef LOOPBACK
   mcp2515.setLoopbackMode();
   #endif
+
+  nodes[myID]=1;
+  ack[myID]=1;
+
+  if (myID==1){
+    send_message( 0,myID, 0, 0, 0);
+    config_flag=1;
+    check_acks_flag=1;    
+  }
 }
 
 void loop() {
-  struct id_info id_s;
   struct message m_read;
   bool has_data;
-  bool ack [n_ids-1];
-  
-  //defines id for message - just for testing porpouse
-  id_s.from=myID;
-  id_s.to =2;
-  id_s.code= 10;
-
-  for( int i = 0; i < 4 ; i++ ) {
-  Serial.print( "Sending: " );
-  Serial.println( counter );
-  id_s.to =i;
-  if( write( pack_id(id_s) ,counter++, counter,8) != MCP2515::ERROR_OK )
-    #ifdef DEBUG
-      Serial.println( "\t \t \t \t MCP2515 TX Buf Full" );
-    #endif
-  }
-  
+  unsigned int counter=0;
+  bool done_acks=0;
+  int state_config=0;
+  int node_config=0;
+  float slopes[n_max];    
   
   if( interrupt ) {
     m_read = read_message( &has_data);
@@ -82,53 +82,43 @@ void loop() {
       switch (m_read.id.code){
         //beguining of start up procedure messages
         case 0:
-          config_flag=1;
-          // !!!!!!!! stops all streams of data !!!!!!!!
-          // !!!!!!! put output at zero !!!!!!!
-           id_s.from=myID;
-           id_s.to =m_read.id.from;
-           id_s.code= 1;
-          if( write( pack_id(id_s) ,0, 0,8) != MCP2515::ERROR_OK )
-            #ifdef DEBUG
-              Serial.println( "\t \t \t \t MCP2515 TX Buf Full" );
-            #endif
+          if (myID==1){
+            nodes[m_read.id.from]=1;
+            config_flag=1;
+          }
+          else if (m_read.id.from==1){
+            config_flag=1;
+            // !!!!!!!! stops all streams of data !!!!!!!!
+            // !!!!!!! put output at zero !!!!!!!
+            send_message( m_read.id.from,myID, 1, 0, 0);
+          }
           break;
         case 1:
-          ack[m_read.id.from]=1;
+          if(nodes[m_read.id.from]==0){
+            nodes[m_read.id.from]=1;
+          }
+          ack[m_read.id.from]=1; //put one in the vector
           break;
         case 2:
           //!!!!!!!!!! get lux value !!!!!!!!
           //!!!!!!!!!! calculate the slope for number in message !!!!!!!!!!!
-          id_s.from=myID;
-          id_s.to =1;
-          id_s.code= 1;
-          if( write( pack_id(id_s) ,0, 2,8) != MCP2515::ERROR_OK )
-            #ifdef DEBUG
-              Serial.println( "\t \t \t \t MCP2515 TX Buf Full" );
-            #endif
+          send_message(1,myID,1,m_read.value1.value,2);
           break;
-        case 3:
-          // !!!!!!!!!!!!!! turn light at max !!!!!!!!!!!!
-          id_s.from=myID;
-          id_s.to =1;
-          id_s.code= 1;
-          if( write( pack_id(id_s) ,0, 3,8) != MCP2515::ERROR_OK )
-            #ifdef DEBUG
-              Serial.println( "\t \t \t \t MCP2515 TX Buf Full" );
-            #endif
+        case 3: 
+          if(m_read.value1.value==0){
+            //!!!!!!!!!!! turn light off !!!!!!!!!!
+          }
+          else if(m_read.value1.value==1){
+            // !!!!!!!!!!!!!! turn light at max !!!!!!!!!!!!
+          }
+          send_message(1,myID,1,m_read.value1.value,3);
           break;
         case 4:
-          //!!!!!!!!!!! turn light off !!!!!!!!!!
-          id_s.from=myID;
-          id_s.to =1;
-          id_s.code= 1;
-          if( write( pack_id(id_s) ,0, 4,8) != MCP2515::ERROR_OK )
-            #ifdef DEBUG
-              Serial.println( "\t \t \t \t MCP2515 TX Buf Full" );
-            #endif
+          config_flag=2;
+          send_message( 1,myID,1,0,4);
           break;
         case 5:
-          config_flag=0;
+          //not use 
           break;
         //end of start up procedure messages
         //beguining of hub fuction messages
@@ -155,6 +145,34 @@ void loop() {
         
       }
       m_read = read_message( &has_data);
+    }
+  }
+
+  //checking acks
+  if (check_acks_flag==1){
+    done_acks=check_acks(ack,nodes); 
+    if (done_acks==1){
+      check_acks_flag=0;
+      //reset ack vector
+      for(int i=0;i<n_max;i++){
+        ack[i]=0;
+      }
+    }
+  }
+
+  if(done_acks==1 && config_flag==1){
+    done_acks=0;
+    config_flag=config_setup(slopes, &check_acks_flag, ack, &node_config, &state_config, n_max, nodes,&done_acks);
+  }
+
+  //indicates its presence to node 1
+  if (myID!=1 && config_flag==0){
+    if (counter<=1000){
+      counter+=1;
+    }
+    else{
+      send_message(1,myID,0,0,0);
+      counter=0;
     }
   }
   delay(100); //some time to breath

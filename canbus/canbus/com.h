@@ -67,4 +67,7 @@ void irqHandler();
 uint32_t  pack_id (struct id_info id_unp);
 struct id_info unpack_id(uint32_t id_pack);
 struct message read_message( bool* has_data);
+void send_message( int8_t to,int8_t from, int8_t code, float val1, float val2);
+bool check_acks( bool ack[], bool node[]);
+short config_setup(float *slopes, bool* check_acks_flag, bool *acks, int* n_atual, int* estado, int n_max, bool node[],bool* done_acks);
 #endif

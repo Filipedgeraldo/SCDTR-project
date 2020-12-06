@@ -121,5 +121,111 @@ struct message read_message( bool* has_data){
     }
   }
  return mtr;
- }
+}
+
+void send_message( int8_t to,int8_t from, int8_t code, float val1, float val2){
+  struct id_info id_s;
+  id_s.from=from;
+  id_s.to =to;
+  id_s.code= code;
+  
+  if( write( pack_id(id_s) ,val1, val2,8) != MCP2515::ERROR_OK )
+    #ifdef DEBUG
+      Serial.println( "\t \t \t \t MCP2515 TX Buf Full" );
+    #endif
+  }
+
+  bool check_acks( bool ack[], bool node[]){
+    bool checker=1;
+    for(int i=1;i<n_max;i++){
+      if(node[i]=1 && ack[i]!=1){
+        checker=0; 
+      }
+    }
+  return checker;
+}
+
+short config_setup(float *slopes, bool* check_acks_flag, bool *acks, int* n_atual, int* estado, int n_max, bool node[],bool* done_acks){
+  short config_s=1;
+  
+  switch(*estado){
+    case 0:{
+      send_message(0,1,2,0,0);
+      //!!!!!!!!get value 0!!!!!!!!
+      *check_acks_flag=1;
+      acks[1]=1;
+      *estado++;
+      *n_atual++;
+      break;
+    }
+    case 1:{
+      if (*n_atual==1){
+        //!!!!!!!turn on light!!!!!!!!!!
+        *done_acks=1;
+      }
+      else{
+        send_message(*n_atual,1,3,1,0);
+        *check_acks_flag=1;
+        for(int i=1;i<n_max;i++){
+          if(i!=*n_atual){
+            acks[i]=1;
+          }
+        }
+      }
+      estado++;
+      break;
+    }
+    case 2:{
+      //!!!!!!!!!!get val numero atual!!!!!!
+      //!!!!!slope calculation!!!!!!
+      send_message(0,1,2,*n_atual,0);
+      *check_acks_flag=1;
+      acks[1]=1;
+      *estado++;
+      break;
+    }
+    case 3:{
+      if (*n_atual==1){
+        //!!!!!!!turn off light!!!!!!!!!!
+        *done_acks=1;
+      }
+      else{
+        send_message(*n_atual,1,3,0,0);
+        *check_acks_flag=1;
+        for(int i=1;i<n_max;i++){
+          if(i!=*n_atual){
+            acks[i]=1;
+          }
+        }
+      }
+      estado++;
+      break;
+    }
+    case 4:{
+      int n=*n_atual;
+      for(int i=n_max;i>=*n_atual;i--){
+        if(node[i]==1){
+          *n_atual=i;  
+        }
+      }
+      if(n==*n_atual){
+        send_message(0,1,4,0,0);
+        *check_acks_flag=1;
+        acks[1]=1;
+        *estado++;
+      }
+      else{
+        *estado=1;
+      }
+      break;
+    }
+    case 5:{
+      *estado=0;
+      *n_atual=0;
+      config_s=2;
+      break;
+    }
+  }
+  return config_s;
+}
   
